@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Mime;
@@ -7,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RiskFirst.Hateoas;
+using USSC.DeckSorter.BusinessLogic;
 using USSC.DeckSorter.Requests;
 using USSC.DeckSorter.Responses;
 
@@ -20,22 +20,31 @@ namespace USSC.DeckSorter.Controllers
     public class DeckController : ControllerBase
     {
         /// <summary>
-        /// Список доступных колод. todo: заменить на нормальный источник данных.
+        /// Сервис для работы с колодами.
         /// </summary>
-        private static List<DeckResponse> decks = new List<DeckResponse>();
+        private readonly IDeckService _deckService;
 
+        /// <summary>
+        /// Маппер для колод.
+        /// </summary>
+        private readonly DeckMapper _deckMapper;
+        
         /// <summary>
         /// Сервис для построения ссылок HATEOAS.
         /// </summary>
-        private readonly ILinksService linksService;
+        private readonly ILinksService _linksService;
 
         /// <summary>
         /// Конструктор для объекта <see cref="DeckController"/>.
         /// </summary>
         /// <param name="linksService">Сервис для построения ссылок HATEOAS.</param>
-        public DeckController(ILinksService linksService)
+        /// <param name="deckService">Сервис для работы с колодами.</param>
+        /// <param name="deckMapper">Маппер для колод.</param>
+        public DeckController(ILinksService linksService, IDeckService deckService, DeckMapper deckMapper)
         {
-            this.linksService = linksService;
+            this._deckMapper = deckMapper;
+            this._deckService = deckService;
+            this._linksService = linksService;
         }
 
         /// <summary>
@@ -49,15 +58,14 @@ namespace USSC.DeckSorter.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetDeck([Required] [FromRoute] Guid id)
         {
-            var deckResponse = decks.FirstOrDefault(x => x.Id == id);
-
-            if (deckResponse == null)
+            var deck = await _deckService.Find(id);
+            if (deck == null)
             {
-                return NotFound(id);
+                return NotFound();
             }
-            
-            deckResponse.Links.Clear();
-            await linksService.AddLinksAsync(deckResponse);
+
+            var deckResponse = _deckMapper.Map(deck);
+            await _linksService.AddLinksAsync(deckResponse);
             return Ok(deckResponse);
         }
 
@@ -69,7 +77,15 @@ namespace USSC.DeckSorter.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllDecks()
         {
-            return Ok(decks.Select(x => new {x.Id, x.Name}));
+            var decks = await _deckService.Find();
+            var deckResponses = decks.Select(_deckMapper.Map);
+            
+            foreach (var deckResponse in deckResponses)
+            {
+                await _linksService.AddLinksAsync(deckResponse);
+            }
+            
+            return Ok(deckResponses);
         }
 
         /// <summary>
@@ -80,17 +96,21 @@ namespace USSC.DeckSorter.Controllers
         [HttpPost(Name = nameof(CreateDeck))]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateDeck([Required] [FromBody] DeckCreateRequest deckRequest)
-        {
-            var deckResponse = new DeckResponse
+        {  
+            var deck = await _deckService.Find(deckRequest.Name);
+            if (deck != null)
             {
-                Id = Guid.NewGuid(),
-                Name = deckRequest.Name
-            };
+                return Conflict(deckRequest.Name);
+            }
+            
+            await _deckService.CreateNewDeck(deckRequest.Name);
+            deck = await _deckService.Find(deckRequest.Name);
+            var deckResponse = _deckMapper.Map(deck);
 
-            decks.Add(deckResponse);
-            await linksService.AddLinksAsync(deckResponse);
+            await _linksService.AddLinksAsync(deckResponse);
             return CreatedAtAction(nameof(GetDeck), new {id = deckResponse.Id}, deckResponse);
         }
 
@@ -98,16 +118,18 @@ namespace USSC.DeckSorter.Controllers
         /// Перемешивание колоды.
         /// </summary>
         /// <param name="id">Уникальный идентификатор колоды.</param>
-        [HttpPatch("{id}", Name = nameof(SorterDeck))]
+        [HttpPatch("{id}", Name = nameof(ShuffleDeck))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SorterDeck([Required] [FromRoute] Guid id)
+        public async Task<IActionResult> ShuffleDeck([Required] [FromRoute] Guid id)
         {
-            if (!decks.Any(x => x.Id == id))
+            if (await _deckService.IsDeckNotExists(id))
             {
                 return NotFound();
             }
 
+            await _deckService.SnuffleDeck(id);
+            
             return Ok();
         }
 
@@ -118,13 +140,11 @@ namespace USSC.DeckSorter.Controllers
         [HttpDelete("{id}", Name = nameof(DeleteDeck))]
         public async Task<IActionResult> DeleteDeck([Required] [FromRoute] Guid id)
         {
-            if (!decks.Any(x => x.Id == id))
+            if (await _deckService.IsDeckNotExists(id))
             {
                 return NotFound();
             }
-            
-            decks.Remove(decks.First(x => x.Id == id));
-            
+            await _deckService.Remove(id);
             return Ok();
         }
     }

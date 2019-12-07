@@ -18,6 +18,11 @@ namespace USSC.DeckSorter.Responses
         /// Наименование колоды.
         /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// Набор карт в колоде.
+        /// </summary>
+        public string[] Cards { get; set; }
 
         /// <summary>
         /// Список доступных действий надо колодой.

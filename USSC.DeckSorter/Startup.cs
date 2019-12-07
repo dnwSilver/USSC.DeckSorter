@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RiskFirst.Hateoas;
+using USSC.DeckSorter.BusinessLogic;
 using USSC.DeckSorter.Controllers;
 using USSC.DeckSorter.Responses;
 
@@ -26,12 +27,17 @@ namespace USSC.DeckSorter
             {
                 config.AddPolicy<DeckResponse>(policy =>
                 {
-                    policy.RequireRoutedLink("self", nameof(DeckController.GetDeck), x => new {id = x.Id})
-                        .RequireRoutedLink("sorter", nameof(DeckController.SorterDeck), x => new {id = x.Id})
+                    policy.RequireRoutedLink("self", nameof(DeckController.GetDeck), x => new { id = x.Id})
+                        .RequireRoutedLink("shuffle", nameof(DeckController.ShuffleDeck), x => new {id = x.Id})
                         .RequireRoutedLink("delete", nameof(DeckController.DeleteDeck), x => new {id = x.Id})
                         .RequireRoutedLink("all", nameof(DeckController.GetAllDecks));
                 });
             });
+            
+            services.Configure<DeckSettings>(Configuration);
+            services.AddSingleton<DeckMapper>();
+            services.AddTransient<IDeckService, DeckService>();
+            services.AddTransient<IDeckRepository, DeckRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
