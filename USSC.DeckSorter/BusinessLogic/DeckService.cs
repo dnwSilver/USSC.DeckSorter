@@ -19,9 +19,9 @@ namespace USSC.DeckSorter.BusinessLogic
         /// Репозиторий для работы с колодой.
         /// </summary>
         private readonly IDeckRepository _deckRepository;
-
+        
         /// <summary>
-        /// Репозиторий для работы с колодой.
+        /// Алгоритм перетасовки колоды.
         /// </summary>
         private readonly IShuffleAlgorithm _shuffleAlgorithm;
 
@@ -30,7 +30,7 @@ namespace USSC.DeckSorter.BusinessLogic
         /// </summary>
         /// <param name="deckSettings">Набор настроек для колоды карт.</param>
         /// <param name="deckRepository">Репозиторий для работы с колодой.</param>
-        /// <param name="shuffleAlgorithm">Алгоритм перетасовки колоды..</param>
+        /// <param name="shuffleAlgorithm">Алгоритм перетасовки колоды.</param>
         public DeckService(IOptionsMonitor<DeckSettings> deckSettings, IDeckRepository deckRepository,
             IShuffleAlgorithm shuffleAlgorithm)
         {

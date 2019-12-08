@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -38,7 +39,12 @@ namespace USSC.DeckSorter
             services.AddSingleton<DeckMapper>();
             services.AddTransient<IDeckService, DeckService>();
             services.AddTransient<IDeckRepository, DeckRepository>();
-            services.AddTransient<IShuffleAlgorithm, RandomSnuffle>();
+            services.AddTransient<IShuffleAlgorithm, RandomShuffle>();
+            
+            if (Convert.ToBoolean(Configuration[nameof(DeckSettings.HandSnuffle)]))
+                services.AddTransient<IShuffleAlgorithm, HandShuffle>();
+            else
+                services.AddTransient<IShuffleAlgorithm, HandShuffle>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

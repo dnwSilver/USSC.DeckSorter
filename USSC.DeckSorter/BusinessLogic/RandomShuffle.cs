@@ -3,24 +3,25 @@
 namespace USSC.DeckSorter.BusinessLogic
 {
     /// <summary>
-    /// Алгоритм перетасовки колоды руками.
+    /// Алгоритм случайной перетасовки колоды.
     /// </summary>
-    public class RandomSnuffle : IShuffleAlgorithm
-    {  
+    public class RandomShuffle : IShuffleAlgorithm
+    {
         /// <summary>
         /// Рандомайзер.
         /// </summary>
-        static readonly Random random = new Random();
-        
+        private static readonly Random Random = new Random();
+
         /// <summary>
         /// Перетасовка колоды.
         /// </summary>
         /// <param name="deck">Колода для перетасовки.</param>
+        /// <remarks>Тасование Фишера—Йетса.</remarks>
         public void Shuffle(IDeck deck)
         {
             for (var cardIndex = deck.Count - 1; cardIndex > 0; --cardIndex)
             {
-                var newCardIndex = random.Next(cardIndex+1);
+                var newCardIndex = Random.Next(cardIndex + 1);
                 var temp = deck[cardIndex];
                 deck[cardIndex] = deck[newCardIndex];
                 deck[newCardIndex] = temp;
