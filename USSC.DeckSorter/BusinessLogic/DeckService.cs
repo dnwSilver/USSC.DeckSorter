@@ -21,14 +21,22 @@ namespace USSC.DeckSorter.BusinessLogic
         private readonly IDeckRepository _deckRepository;
 
         /// <summary>
+        /// Репозиторий для работы с колодой.
+        /// </summary>
+        private readonly IShuffleAlgorithm _shuffleAlgorithm;
+
+        /// <summary>
         /// Конструктор для <see cref="DeckService"/>.
         /// </summary>
         /// <param name="deckSettings">Набор настроек для колоды карт.</param>
         /// <param name="deckRepository">Репозиторий для работы с колодой.</param>
-        public DeckService(IOptionsMonitor<DeckSettings> deckSettings, IDeckRepository deckRepository)
+        /// <param name="shuffleAlgorithm">Алгоритм перетасовки колоды..</param>
+        public DeckService(IOptionsMonitor<DeckSettings> deckSettings, IDeckRepository deckRepository,
+            IShuffleAlgorithm shuffleAlgorithm)
         {
             _deckSettings = deckSettings;
             _deckRepository = deckRepository;
+            _shuffleAlgorithm = shuffleAlgorithm;
         }
 
         /// <summary>
@@ -109,17 +117,7 @@ namespace USSC.DeckSorter.BusinessLogic
         public async Task<bool> SnuffleDeck(Guid deckId)
         {
             var deck = await _deckRepository.FindById(deckId);
-
-            //todo: Вот тут всё провести перетасовку.
-            if (_deckSettings.CurrentValue.HandSnuffle)
-            {
-                //Алгоритм для ручной тасовки.
-            }
-            else
-            {
-                //Алгоритм для быстрой тасовки.
-            }
-
+            _shuffleAlgorithm.Shuffle(deck);
             return await _deckRepository.Update(deck);
         }
 

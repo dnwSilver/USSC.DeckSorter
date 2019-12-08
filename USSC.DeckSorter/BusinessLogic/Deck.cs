@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace USSC.DeckSorter.BusinessLogic
@@ -7,7 +6,7 @@ namespace USSC.DeckSorter.BusinessLogic
     /// <summary>
     /// Колода карт.
     /// </summary>
-    public class Deck : HashSet<ICard>, IDeck
+    public class Deck : List<ICard>, IDeck
     {
         /// <summary>
         /// Размер стандартной колоды карт.
@@ -40,19 +39,9 @@ namespace USSC.DeckSorter.BusinessLogic
         /// </summary>
         /// <param name="card">Добавляемая карта.</param>
         /// <returns>true - карта добавлена, false - карта не добавлена.</returns>
-        public new bool Add(ICard card)
+        public new void Add(ICard card)
         {
             base.Add(card);
-            return true;
-        }
-        
-        /// <summary>
-        /// Перетасовать колоду.
-        /// </summary>
-        public void Shuffle()
-        {
-            //todo Тут необходимо вызывать алгоритм сортировки.
-            throw new NotImplementedException();
         }
     }
 }

@@ -6,7 +6,7 @@ namespace USSC.DeckSorter.BusinessLogic
     /// <summary>
     /// Колода карт.
     /// </summary>
-    public interface IDeck: IEnumerable<ICard>
+    public interface IDeck: IList<ICard>
     {
         /// <summary>
         /// Уникальный идентификатор колоды.
@@ -17,10 +17,5 @@ namespace USSC.DeckSorter.BusinessLogic
         /// Уникальное имя колоды.
         /// </summary>
         string Name { get; }
-        
-        /// <summary>
-        /// Перетасовать колоду.
-        /// </summary>
-        void Shuffle();
     }
 }
